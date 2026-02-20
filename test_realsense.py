@@ -9,7 +9,7 @@ def main():
     # Configure the camera settings
     # NOTE: Replace "YOUR_SERIAL_NUMBER" with the output from `lerobot-find-cameras realsense`
     config = RealSenseCameraConfig(
-        serial_number_or_name="YOUR_SERIAL_NUMBER", 
+        serial_number_or_name="841512070981", 
         fps=30,
         width=640,
         height=480,
