@@ -1,49 +1,27 @@
+import pyrealsense2 as rs
 import cv2
-from lerobot.cameras.realsense.configuration_realsense import RealSenseCameraConfig
-from lerobot.cameras.realsense.camera_realsense import RealSenseCamera
-from lerobot.cameras.configs import ColorMode, Cv2Rotation
+import numpy as np
 
-def main():
-    print("Initializing RealSense camera...")
-    
-    # Configure the camera settings
-    # NOTE: Replace "YOUR_SERIAL_NUMBER" with the output from `lerobot-find-cameras realsense`
-    config = RealSenseCameraConfig(
-        serial_number_or_name="841512070981",
-        fps=30,
-        width=640,
-        height=480,
-        color_mode=ColorMode.RGB,
-        use_depth=False, 
-        rotation=Cv2Rotation.NO_ROTATION
-    )
+print("Bypassing LeRobot: Testing pure Intel drivers...")
+pipeline = rs.pipeline()
+config = rs.config()
+config.enable_device("841512070981")
+config.enable_stream(rs.stream.color, 640, 480, rs.format.rgb8, 30)
 
-    # Instantiate and connect the camera
-    camera = RealSenseCamera(config)
-    camera.connect()
-    
-    print("Camera connected! Select the video window and press 'q' to quit.")
+try:
+    pipeline.start(config)
+    print("Pipeline started! Press 'q' to quit.")
+    while True:
+        frames = pipeline.wait_for_frames()
+        color_frame = frames.get_color_frame()
+        if not color_frame:
+            continue
 
-    try:
-        while True:
-            # Capture the live frame
-            frame = camera.read()
-            
-            # LeRobot captures in RGB, but OpenCV displays in BGR format
-            display_frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-            
-            # Show the frame in a window
-            cv2.imshow("Mike's RealSense Test", display_frame)
-            
-            # Wait 1ms and check if the user pressed 'q'
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                print("Closing camera feed...")
-                break
-                
-    finally:
-        # Safely disconnect hardware and close windows
-        camera.disconnect()
-        cv2.destroyAllWindows()
+        color_image = np.asanyarray(color_frame.get_data())
+        cv2.imshow('Pure RealSense Test', color_image)
 
-if __name__ == "__main__":
-    main()
+        if cv2.waitKey(1) == ord('q'):
+            break
+finally:
+    pipeline.stop()
+    cv2.destroyAllWindows()
